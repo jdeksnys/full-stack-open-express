@@ -56,7 +56,7 @@ app.delete('/api/persons/:id', (request, response) => {
 })
 
 app.post('/api/persons', (request, response) => {
-    if(!request.body){
+    if(!request.body) {
         return response.status(400).json({error: "person missing"})
     }
     let newPerson = request.body
