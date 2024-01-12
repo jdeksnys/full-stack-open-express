@@ -26,11 +26,19 @@ const persons = [
 ]
 let lastApiCall = null
 
-
 app.get('/api/persons', (request, response) => {
-    lastApiCall = new Date()
-    console.log(lastApiCall)
     response.json(persons)
+})
+
+app.get('/api/persons/:id', (request, response) => {
+    lastApiCall = new Date()
+    const id = Number(request.params.id)
+    const person = persons.find(rec => rec.id === id)
+    if(!person){
+        response.status(404).end()
+    } else {
+        response.json(person)
+    }
 })
 
 app.get('/info', (request, response) => {
