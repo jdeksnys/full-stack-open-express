@@ -2,7 +2,7 @@ const express = require('express')
 const app = express()
 
 
-const contacts = [
+const persons = [
     { 
       "id": 1,
       "name": "Arto Hellas", 
@@ -24,9 +24,20 @@ const contacts = [
       "number": "39-23-6423122"
     }
 ]
+let lastApiCall = null
+
 
 app.get('/api/persons', (request, response) => {
-    response.json(contacts)
+    lastApiCall = new Date()
+    console.log(lastApiCall)
+    response.json(persons)
+})
+
+app.get('/info', (request, response) => {
+    lastApiCall = new Date()
+    const countData = `Phonebook has info for ${persons.length} people`
+    const html = `<p>${countData}</p></br><p>${lastApiCall}</p>`
+    response.send(html)
 })
 
 
