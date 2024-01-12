@@ -2,7 +2,7 @@ const express = require('express')
 const app = express()
 
 
-const persons = [
+let persons = [
     { 
       "id": 1,
       "name": "Arto Hellas", 
@@ -46,6 +46,12 @@ app.get('/info', (request, response) => {
     const countData = `Phonebook has info for ${persons.length} people`
     const html = `<p>${countData}</p></br><p>${lastApiCall}</p>`
     response.send(html)
+})
+
+app.delete('/api/persons/:id', (request, response) => {
+    const id = Number(request.params.id)
+    persons = persons.filter(rec => rec.id !== id)
+    response.status(204).send()
 })
 
 
