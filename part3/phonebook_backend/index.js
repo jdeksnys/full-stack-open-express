@@ -1,6 +1,11 @@
+require('dotenv').config()
 const express = require('express')
 var morgan = require('morgan')
 const app = express()
+const Person = require('./models/person')
+const cors = require('cors')
+
+app.use(cors())
 app.use(express.json())
 
 
@@ -20,56 +25,36 @@ app.use(
   
 
 
-let persons = [
-    { 
-      "id": 1,
-      "name": "Arto Hellas", 
-      "number": "040-123456"
-    },
-    { 
-      "id": 2,
-      "name": "Ada Lovelace", 
-      "number": "39-44-5323523"
-    },
-    { 
-      "id": 3,
-      "name": "Dan Abramov", 
-      "number": "12-43-234345"
-    },
-    { 
-      "id": 4,
-      "name": "Mary Poppendieck", 
-      "number": "39-23-6423122"
-    }
-]
 let lastApiCall = null
 
 app.get('/api/persons', (request, response) => {
+  Person.find({}).then(persons => {
     response.json(persons)
+  })
 })
 
 app.get('/api/persons/:id', (request, response) => {
     lastApiCall = new Date()
     const id = Number(request.params.id)
-    const person = persons.find(rec => rec.id === id)
-    if(!person){
-        response.status(404).end()
-    } else {
-        response.json(person)
-    }
+    Person.find({id: id}).then(person => {
+      response.json(person)
+    })
 })
 
 app.get('/info', (request, response) => {
     lastApiCall = new Date()
-    const countData = `Phonebook has info for ${persons.length} people`
-    const html = `<p>${countData}</p></br><p>${lastApiCall}</p>`
-    response.send(html)
+    Person.find({}).then(persons => {
+      const countData = `Phonebook has info for ${persons.length} people`
+      const html = `<p>${countData}</p></br><p>${lastApiCall}</p>`
+      response.send(html)
+    })
 })
 
 app.delete('/api/persons/:id', (request, response) => {
     const id = Number(request.params.id)
-    persons = persons.filter(rec => rec.id !== id)
-    response.status(204).end()
+    Person.findOneAndDelete({id: id}).then(persons => {
+      response.status(204).end()
+    })
 })
 
 app.post('/api/persons', (request, response) => {
@@ -80,17 +65,27 @@ app.post('/api/persons', (request, response) => {
     const number = request.body.number
     if(!name || !number){
         return response.status(400).json({error: "name or number missing"})
-    } else if (persons.find(rec => rec.name === name)){
-        return response.status(409).json({error: "name must be unique"})
     }
-    let newPerson = request.body
-    newPerson.id = Math.floor(Math.random() * 1000000)
-    persons = persons.concat(newPerson)
-    response.status(204).end()
+    
+    Person.find({name: name}).then(persons => {
+      if(persons.length > 0){
+        return response.status(409).json({error: "name must be unique"})
+      } else {
+        const p = new Person({
+          id: Math.floor(Math.random() * 1000000),
+          name: request.body.name,
+          number: request.body.number
+        })
+        p.save().then(savedPerson => {
+          response.status(204).end()
+        })
+      }
+    })
 })
 
 
-const PORT = 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
     console.log(`Server running on ${PORT}`)
+    console.log(`Server running on ${process.env.MONGODB_URI}`)
 })
